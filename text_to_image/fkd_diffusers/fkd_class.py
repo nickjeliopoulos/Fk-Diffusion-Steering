@@ -13,6 +13,7 @@ class PotentialType(Enum):
     DIFF = "diff"
     MAX = "max"
     ADD = "add"
+    RT = "rt"
 
 
 class FKD:
@@ -116,6 +117,8 @@ class FKD:
         elif self.potential_type == PotentialType.DIFF:
             diffs = rs_candidates - self.population_rs
             w = torch.exp(self.lmbda * diffs)
+        elif self.potential_type == PotentialType.RT:
+            w = torch.exp(self.lmbda * rs_candidates)
         else:
             raise ValueError(f"potential_type {self.potential_type} not recognized")
 
@@ -123,6 +126,7 @@ class FKD:
             if (
                 self.potential_type == PotentialType.MAX
                 or self.potential_type == PotentialType.ADD
+                or self.potential_type == PotentialType.RT
             ):
                 w = torch.exp(self.lmbda * rs_candidates) / self.product_of_potentials
 

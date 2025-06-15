@@ -23,6 +23,8 @@ class PotentialType(Enum):
     DIFF = "diff"
     MAX = "max"
     ADD = "add"
+    RT = "rt"
+
     BON = "bon"  # Returns sorted particles
     IS = "is"
 
@@ -169,17 +171,20 @@ class FKD:
         elif self.potential_type == PotentialType.DIFF:
             diffs = rs_candidates - self.population_rs
             w = torch.exp(self.lmbda * diffs)
+        elif self.potential_type == PotentialType.RT:
+            w = torch.exp(self.lmbda * rs_candidates)
         elif self.potential_type in [PotentialType.BON, PotentialType.IS]:
             assert at_terminal_sample
             w = torch.exp(self.lmbda * rs_candidates)
         else:
             raise ValueError(f"potential_type {self.potential_type} not recognized")
 
-        # If we are at the last timestep, compute corrected potentials if using the MAX or ADD potential
+        # If we are at the last timestep, compute corrected potentials if using the MAX, ADD, or RT potential
         if at_terminal_sample:
             if (
                 self.potential_type == PotentialType.MAX
                 or self.potential_type == PotentialType.ADD
+                or self.potential_type == PotentialType.RT
             ):
                 w = torch.exp(self.lmbda * rs_candidates) / self.product_of_potentials
 
