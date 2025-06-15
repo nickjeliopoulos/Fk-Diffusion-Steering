@@ -161,7 +161,8 @@ class FKD:
 
         # Compute potentials
         if self.potential_type == PotentialType.MAX:
-            w = torch.exp(self.lmbda * torch.max(rs_candidates, self.population_rs))
+            rs_candidates = torch.max(rs_candidates, self.population_rs)
+            w = torch.exp(self.lmbda * rs_candidates)
         elif self.potential_type == PotentialType.ADD:
             rs_candidates = rs_candidates + self.population_rs
             w = torch.exp(self.lmbda * rs_candidates)
