@@ -23,6 +23,8 @@ class PotentialType(Enum):
     DIFF = "diff"
     MAX = "max"
     ADD = "add"
+    RT = "rt"
+
     BON = "bon"  # Returns sorted particles
     IS = "is"
 
@@ -161,24 +163,28 @@ class FKD:
 
         # Compute potentials
         if self.potential_type == PotentialType.MAX:
-            w = torch.exp(self.lmbda * torch.max(rs_candidates, self.population_rs))
+            rs_candidates = torch.max(rs_candidates, self.population_rs)
+            w = torch.exp(self.lmbda * rs_candidates)
         elif self.potential_type == PotentialType.ADD:
             rs_candidates = rs_candidates + self.population_rs
             w = torch.exp(self.lmbda * rs_candidates)
         elif self.potential_type == PotentialType.DIFF:
             diffs = rs_candidates - self.population_rs
             w = torch.exp(self.lmbda * diffs)
+        elif self.potential_type == PotentialType.RT:
+            w = torch.exp(self.lmbda * rs_candidates)
         elif self.potential_type in [PotentialType.BON, PotentialType.IS]:
             assert at_terminal_sample
             w = torch.exp(self.lmbda * rs_candidates)
         else:
             raise ValueError(f"potential_type {self.potential_type} not recognized")
 
-        # If we are at the last timestep, compute corrected potentials if using the MAX or ADD potential
+        # If we are at the last timestep, compute corrected potentials if using the MAX, ADD, or RT potential
         if at_terminal_sample:
             if (
                 self.potential_type == PotentialType.MAX
                 or self.potential_type == PotentialType.ADD
+                or self.potential_type == PotentialType.RT
             ):
                 w = torch.exp(self.lmbda * rs_candidates) / self.product_of_potentials
 
@@ -192,6 +198,10 @@ class FKD:
 
         w = torch.clamp(w, 0, 1e10)
         w[torch.isnan(w)] = 0.0
+
+        # if all 0, set w to 1
+        if w.sum() == 0:
+            w = torch.ones_like(w)
 
         # If we are using adaptive resampling, check if we need to resample
         if self.adaptive_resampling or (
@@ -225,7 +235,6 @@ class FKD:
                 self.population_rs = rs_candidates
 
         else:
-            # Resample indices based on weights
             indices = torch.multinomial(
                 w, num_samples=self.num_particles, replacement=True
             )
