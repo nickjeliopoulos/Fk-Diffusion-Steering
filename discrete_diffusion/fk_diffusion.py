@@ -39,7 +39,7 @@ def batched_infer(*, inputs, fn, batch_size):
 
 
 def compute_rewards(*, samples, reward_name, reward_label):
-    '''Compute log rewards'''
+    '''Compute rewards'''
     if reward_name == 'sentiment':
         scores, _ = sentiment_score(texts=samples, label=reward_label)
     elif reward_name == 'toxicity':
