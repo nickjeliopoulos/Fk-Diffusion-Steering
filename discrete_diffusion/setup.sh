@@ -2,6 +2,9 @@
 set -ex
 
 git submodule update --init
+## or manually clone our mdlm fork:
+# git clone git@github.com:zacharyhorvitz/mdlm.git
+
 
 pip install -r requirements.txt 
 pip install flash-attn
