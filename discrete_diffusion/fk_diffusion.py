@@ -9,6 +9,7 @@ from reward_functions import (
     gpt2_perp_score,
     cola_score,
     infinigram_perp_score,
+    logmeanexp,
 )
 from mdlm.diffusion import Diffusion, _sample_categorical
 from fkd_class import FKD
@@ -172,8 +173,8 @@ class FKDiffusion(Diffusion):
         # reshape and average
         scores = torch.tensor(scores)
         scores = scores.reshape(len(x_batch), self.config.fk_steering.num_x0_samples)
-        scores = scores.mean(dim=1).tolist()
-
+        # scores = scores.mean(dim=1).tolist()
+        scores = logmeanexp(scores).tolist()
         return scores
 
     @torch.no_grad()

@@ -29,7 +29,7 @@ Python 3.9+ is recommended.
 The `configs/` folder contains configuration files for FK Steering and sampling parameters.
 
 - [**fk_steering_config.yaml**](configs/fk_steering_config.yaml): Configuration file defining FK Steering parameters, including:
-  - `potential_type`: FK Steering potential type (e.g., `diff`, `max`, `bon`).
+  - `potential_type`: FK Steering potential type (e.g., `diff`, `max`, `bon`. or `rt`).
   - `k_particles`: Number of particles used in resampling.
   - `lmbda`: Lambda hyperparameter for reward scaling.
   - `reward_fn`: The reward function to use (e.g., `toxicity`, `cola`, `gpt2_perp`).
@@ -62,5 +62,7 @@ Resulting outputs will be saved in `./outputs/` folder in the `fk_steering` chil
 - [**mdlm_to_eval_format.py**](evaluation/mdlm_to_eval_format.py): Converts MDLM-generated samples into an evaluation-ready format.
 
 - [**evaluate.py**](evaluation/evaluate.py): Computes various evaluation metrics on generated text, including perplexity, CoLA acceptability, distinctiveness, and toxicity.
+
+- [**aggregate_over_seeds_mdlm.py**](evaluation/aggregate_over_seeds_mdlm.py): After running [compute_metrics.sh](evaluation/compute_metrics.sh), you can use this script to aggegrate over seeds.
 
 - [**pplm_discrim_prompts_orig.jsonl**](evaluation/pplm_discrim_prompts_orig.jsonl): Contains prompts used for evaluating text generation (from [SSD-LM](https://github.com/xhan77/ssd-lm)).
