@@ -4,23 +4,16 @@ import json
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
-
 import matplotlib.pyplot as plt
-
 import argparse
-
 from datetime import datetime
-
 import torch
 from diffusers import DDIMScheduler, UNet2DConditionModel
-
 import sys
-sys.path.append("fkd_diffusers")
 
 from fkd_diffusers.fkd_pipeline_sdxl import FKDStableDiffusionXL
 from fkd_diffusers.fkd_pipeline_sd import FKDStableDiffusion
-
-from fks_utils import do_eval
+from fkd_diffusers.fks_utils import do_eval
 
 # load prompt data
 def load_geneval_metadata(prompt_path, max_prompts=None):
@@ -41,9 +34,6 @@ def load_geneval_metadata(prompt_path, max_prompts=None):
     if max_prompts is not None:
         data = data[:max_prompts]
     return data
-
-
-
 
 def main(args):
     # seed everything
@@ -251,14 +241,14 @@ def get_args():
     parser.add_argument("--output_dir", type=str, default="geneval_outputs")
     parser.add_argument("--save_individual_images", type=bool, default=True)
     parser.add_argument("--num_particles", type=int, default=4)
-    parser.add_argument("--num_inference_steps", type=int, default=100)
+    parser.add_argument("--num_inference_steps", type=int, default=50)
     parser.add_argument("--use_smc", action="store_true")
     parser.add_argument("--eta", type=float, default=1.0)
     parser.add_argument("--guidance_reward_fn", type=str, default="ImageReward")
     parser.add_argument(
         "--metrics_to_compute",
         type=str,
-        default="ImageReward#HumanPreference",
+        default="ImageReward",
         help="# separated list of metrics",
     )
     parser.add_argument("--prompt_path", type=str, default="geneval_metadata.jsonl")
@@ -332,6 +322,6 @@ def get_args():
 
 if __name__ == "__main__":
     args = get_args()
-    for seed in [42, 43, 44]:
+    for seed in [42]:
         args.seed = seed
         main(args)
