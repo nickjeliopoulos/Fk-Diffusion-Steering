@@ -133,6 +133,22 @@ class FKD:
         w = torch.clamp(w, 0, 1e10)
         w[torch.isnan(w)] = 0.0
 
+        # If weights are all zero, print diagnostics about w
+        if torch.allclose(w, torch.zeros_like(w)):
+            w_flat = w.view(-1)
+            stats = {
+            "timestep": int(sampling_idx),
+            "shape": tuple(w.shape),
+            "sum": float(w_flat.sum().item()),
+            "mean": float(w_flat.mean().item()),
+            "std": float(w_flat.std().item()),
+            "min": float(w_flat.min().item()),
+            "max": float(w_flat.max().item()),
+            "num_zeros": int((w_flat == 0).sum().item()),
+            "num_positive": int((w_flat > 0).sum().item()),
+            }
+            print(f"FKD - all-zero importance weights detected: {stats}")
+
         if self.adaptive_resampling or sampling_idx == self.time_steps - 1:
             # compute effective sample size
             normalized_w = w / w.sum()
@@ -165,6 +181,7 @@ class FKD:
             indices = torch.multinomial(
                 w, num_samples=self.num_particles, replacement=True
             )
+
             resampled_latents = latents[indices]
             self.population_rs = rs_candidates[indices]
 
