@@ -11,6 +11,7 @@ import torch
 from diffusers import DDIMScheduler, UNet2DConditionModel
 import sys
 import wandb
+import random
 
 from fkd_diffusers.fkd_pipeline_sdxl import FKDStableDiffusionXL
 from fkd_diffusers.fkd_pipeline_sd import FKDStableDiffusion
@@ -81,8 +82,11 @@ def main(args):
 
 	### seed everything
 	torch.manual_seed(args.seed)
-	torch.cuda.manual_seed(args.seed)
-	torch.cuda.manual_seed_all(args.seed)
+	random.seed(args.seed)
+	np.random.seed(args.seed)
+
+	device = "cuda:0" if torch.cuda.is_available() else "cpu"
+	device = torch.device(device)
 
 	if args.resample_t_end is None:
 		args.resample_t_end = args.num_inference_steps
@@ -131,8 +135,6 @@ def main(args):
 	pipe.scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
 
 	# set device
-	device = "cuda:0" if torch.cuda.is_available() else "cpu"
-	device = torch.device(device)
 	pipe = pipe.to(device)
 
 	# set output directory

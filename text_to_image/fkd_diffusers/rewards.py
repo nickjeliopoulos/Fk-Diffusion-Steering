@@ -48,7 +48,8 @@ def do_jpeg_score(*,images):
         buffer = io.BytesIO()
         pil_img.save(buffer, format="JPEG", quality=95)
         size = buffer.tell() / 1000.0
-        score = 250.0 - ( 1.0 * size )
+        score = 500.0 - ( 1.0 * size )
+        score = max(score, 0.0) 
         buffer.close()
         scores.append(score)
     return scores
