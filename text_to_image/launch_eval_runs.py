@@ -151,6 +151,7 @@ def main(args):
             resampling_t_end=args.resample_t_end,
             guidance_reward_fn=args.guidance_reward_fn,
             potential_type=args.potential_type,
+            reward_min_value=0
         )
 
         images = pipe(

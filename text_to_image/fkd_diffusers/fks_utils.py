@@ -14,6 +14,7 @@ from .rewards import (
     do_human_preference_score,
     do_llm_grading,
     do_jpeg,
+    do_jpeg_score
 )
 
 
@@ -104,7 +105,18 @@ def do_eval(*, prompt, images, metrics_to_compute):
             results[metric]["max"] = results_arr.max().item()
             results[metric]["min"] = results_arr.min().item()
 
-        elif metric == "JPEG":
+        elif metric == "JPEG_SCORE":
+            results[metric] = {}
+
+            results[metric]["result"] = do_jpeg_score(images=images)
+            results_arr = torch.tensor(results[metric]["result"])
+
+            results[metric]["mean"] = results_arr.mean().item()
+            results[metric]["std"] = results_arr.std().item()
+            results[metric]["max"] = results_arr.max().item()
+            results[metric]["min"] = results_arr.min().item()
+
+        elif metric == "JPEG_RAW":
             results[metric] = {}
 
             results[metric]["result"] = do_jpeg(images=images)

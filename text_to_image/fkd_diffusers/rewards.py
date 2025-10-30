@@ -32,22 +32,37 @@ def get_reward_function(reward_name, images, prompts, metric_to_chase="overall_s
     elif reward_name == "LLMGrader":
         return do_llm_grading(images=images, prompts=prompts, metric_to_chase=metric_to_chase)
 
-    elif reward_name == "JPEG":
+    elif reward_name == "JPEG_SCORE":
+        return do_jpeg_score(images=images)
+
+    elif reward_name == "JPEG_RAW":
         return do_jpeg(images=images)
     
     else:
         raise ValueError(f"Unknown metric: {reward_name}")
     
 # JPEG Compression
-def do_jpeg(*,images):
+def do_jpeg_score(*,images):
     scores = []
     for pil_img in images:
         buffer = io.BytesIO()
         pil_img.save(buffer, format="JPEG", quality=95)
-        score = 1.0 * float( buffer.tell() / 1000.0 )  # size in KB
+        size = buffer.tell() / 1000.0
+        score = 250.0 - ( 1.0 * size )
         buffer.close()
         scores.append(score)
     return scores
+
+# JPEG Compression
+def do_jpeg(*,images):
+    sizes = []
+    for pil_img in images:
+        buffer = io.BytesIO()
+        pil_img.save(buffer, format="JPEG", quality=95)
+        size = buffer.tell() / 1000.0
+        buffer.close()
+        sizes.append(size)
+    return sizes
 
 # Compute human preference score
 def do_human_preference_score(*, images, prompts, use_paths=False):
