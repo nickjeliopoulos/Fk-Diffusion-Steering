@@ -12,7 +12,8 @@ from .rewards import (
     do_clip_score_diversity,
     do_image_reward,
     do_human_preference_score,
-    do_llm_grading
+    do_llm_grading,
+    do_jpeg,
 )
 
 
@@ -96,6 +97,17 @@ def do_eval(*, prompt, images, metrics_to_compute):
             print(out)
             results[metric]["result"] = out
 
+            results_arr = torch.tensor(results[metric]["result"])
+
+            results[metric]["mean"] = results_arr.mean().item()
+            results[metric]["std"] = results_arr.std().item()
+            results[metric]["max"] = results_arr.max().item()
+            results[metric]["min"] = results_arr.min().item()
+
+        elif metric == "JPEG":
+            results[metric] = {}
+
+            results[metric]["result"] = do_jpeg(images=images)
             results_arr = torch.tensor(results[metric]["result"])
 
             results[metric]["mean"] = results_arr.mean().item()

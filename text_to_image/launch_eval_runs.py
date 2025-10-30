@@ -53,7 +53,7 @@ def main(args):
 
     # configure pipeline
     if "xl" in args.model_name and "dpo" not in args.model_name:
-        print("Using SDXL")
+        # print("Using SDXL")
         pipe = FKDStableDiffusionXL.from_pretrained(
             "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16
         )
@@ -82,7 +82,7 @@ def main(args):
         )
         pipe.unet = unet
     else:
-        print("Using SD")
+        # print("Using SD")
         pipe = FKDStableDiffusion.from_pretrained(
             args.model_name, torch_dtype=torch.float16
         )
@@ -177,7 +177,7 @@ def main(args):
         n_samples += 1
 
         average_time += time_taken.total_seconds()
-        print(f"Time taken: {average_time / n_samples}")
+        # print(f"Time taken: {average_time / n_samples}")
 
         # sort images by reward
         guidance_reward = np.array(results[args.guidance_reward_fn]["result"])
@@ -195,11 +195,11 @@ def main(args):
             metrics_arr[metric]["std"] += results[metric]["std"]
 
         for metric in metrics_to_compute:
-            print(
-                metric,
-                metrics_arr[metric]["mean"] / n_samples,
-                metrics_arr[metric]["max"] / n_samples,
-            )
+            mean = metrics_arr[metric]["mean"] / n_samples
+            maxv = metrics_arr[metric]["max"] / n_samples
+            minv = metrics_arr[metric]["min"] / n_samples
+            stdv = metrics_arr[metric]["std"] / n_samples
+            print(f"{metric:<5} | mean: {mean:8.4f} | max: {maxv:8.4f} | min: {minv:8.4f} | std: {stdv:8.4f}")
 
         if args.save_individual_images:
             sample_path = os.path.join(prompt_path, "samples")
@@ -215,15 +215,15 @@ def main(args):
         with open(os.path.join(prompt_path, "results.json"), "w") as f:
             json.dump(results, f)
 
-        _, ax = plt.subplots(1, args.num_particles, figsize=(args.num_particles * 5, 5))
-        for i, image in enumerate(images):
-            ax[i].imshow(image)
-            ax[i].axis("off")
+        # _, ax = plt.subplots(1, args.num_particles, figsize=(args.num_particles * 5, 5))
+        # for i, image in enumerate(images):
+        #     ax[i].imshow(image)
+        #     ax[i].axis("off")
 
-        plt.suptitle(prompt[0])
-        image_fpath = os.path.join(prompt_path, f"grid.png")
-        plt.savefig(image_fpath)
-        plt.close()
+        # plt.suptitle(prompt[0])
+        # image_fpath = os.path.join(prompt_path, f"grid.png")
+        # plt.savefig(image_fpath)
+        # plt.close()
 
     # save final metrics
     for metric in metrics_to_compute:
@@ -248,7 +248,7 @@ def get_args():
     parser.add_argument(
         "--metrics_to_compute",
         type=str,
-        default="ImageReward",
+        default="JPEG#ImageReward",
         help="# separated list of metrics",
     )
     parser.add_argument("--prompt_path", type=str, default="geneval_metadata.jsonl")
@@ -266,54 +266,54 @@ def get_args():
     parser.add_argument("--potential_type", type=str, default="diff")
 
     args = parser.parse_args()
-    print(args.adaptive_resampling)
+    # print(args.adaptive_resampling)
 
     if args.prompt_path == "geneval_metadata.jsonl":
         args.save_individual_images = True
 
-    if args.model_idx % 4 == 0:
-        args.num_particles = 2
+    # if args.model_idx % 4 == 0:
+    #     args.num_particles = 2
 
-    elif args.model_idx % 4 == 1:
-        args.num_particles = 3
+    # elif args.model_idx % 4 == 1:
+    #     args.num_particles = 3
 
-    elif args.model_idx % 4 == 2:
-        args.num_particles = 4
+    # elif args.model_idx % 4 == 2:
+    #     args.num_particles = 4
 
-    elif args.model_idx % 4 == 3:
-        args.num_particles = 8
-    else:
-        raise ValueError("Unknown model index")
+    # elif args.model_idx % 4 == 3:
+    #     args.num_particles = 8
+    # else:
+    #     raise ValueError("Unknown model index")
 
-    if args.model_idx in [0, 1, 2, 3]: 
-        args.model_name = "stabilityai/stable-diffusion-2-1"
-        # assert False
+    # if args.model_idx in [0, 1, 2, 3]: 
+    #     args.model_name = "stabilityai/stable-diffusion-2-1"
+    #     # assert False
 
-    elif args.model_idx in [4, 5, 6, 7]:
-        args.model_name = "runwayml/stable-diffusion-v1-5"
+    # elif args.model_idx in [4, 5, 6, 7]:
+    #     args.model_name = "runwayml/stable-diffusion-v1-5"
 
-    elif args.model_idx in [8, 9, 10, 11]:
-        args.model_name = "stabilityai/stable-diffusion-xl-base-1.0"
-        # assert False
+    # elif args.model_idx in [8, 9, 10, 11]:
+    #     args.model_name = "stabilityai/stable-diffusion-xl-base-1.0"
+    #     # assert False
 
-    elif args.model_idx in [12, 13, 14, 15]:
-        args.model_name = "CompVis/stable-diffusion-v1-4"
-        # assert False
+    # elif args.model_idx in [12, 13, 14, 15]:
+    #     args.model_name = "CompVis/stable-diffusion-v1-4"
+    #     # assert False
 
-    elif args.model_idx in [99]:
-        args.model_name = "kvablack/ddpo-alignment"
-        args.num_particles = 4
+    # elif args.model_idx in [99]:
+    #     args.model_name = "kvablack/ddpo-alignment"
+    #     args.num_particles = 4
 
-    elif args.model_idx == 100:
-        args.model_name = "mhdang/dpo-sd1.5-text2image-v1"
-        args.num_particles = 4
+    # elif args.model_idx == 100:
+    #     args.model_name = "mhdang/dpo-sd1.5-text2image-v1"
+    #     args.num_particles = 4
 
-    elif args.model_idx == 101:
-        args.model_name = "mhdang/dpo-sdxl-text2image-v1"
-        args.num_particles = 4
+    # elif args.model_idx == 101:
+    #     args.model_name = "mhdang/dpo-sdxl-text2image-v1"
+    #     args.num_particles = 4
 
-    else:
-        raise ValueError(f"Unknown model index {args.model_idx}")
+    # else:
+    #     raise ValueError(f"Unknown model index {args.model_idx}")
 
     args.output_dir = args.prompt_path.replace(".json", f"_outputs")
 

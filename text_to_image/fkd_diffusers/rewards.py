@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import clip
 import hpsv2
+import io
 
 from .image_reward_utils import rm_load
 from .llm_grading import LLMGrader
@@ -17,8 +18,8 @@ REWARDS_DICT = {
 
 # Returns the reward function based on the guidance_reward_fn name
 def get_reward_function(reward_name, images, prompts, metric_to_chase="overall_score"):
-    if reward_name != "LLMGrader":
-        print("`metric_to_chase` will be ignored as it only applies to 'LLMGrader' as the `reward_name`")
+    # if reward_name != "LLMGrader":
+        # print("`metric_to_chase` will be ignored as it only applies to 'LLMGrader' as the `reward_name`")
     if reward_name == "ImageReward":
         return do_image_reward(images=images, prompts=prompts)
     
@@ -30,10 +31,24 @@ def get_reward_function(reward_name, images, prompts, metric_to_chase="overall_s
 
     elif reward_name == "LLMGrader":
         return do_llm_grading(images=images, prompts=prompts, metric_to_chase=metric_to_chase)
+
+    elif reward_name == "JPEG":
+        return do_jpeg(images=images)
     
     else:
         raise ValueError(f"Unknown metric: {reward_name}")
     
+# JPEG Compression
+def do_jpeg(*,images):
+    scores = []
+    for pil_img in images:
+        buffer = io.BytesIO()
+        pil_img.save(buffer, format="JPEG", quality=95)
+        score = 1.0 * float( buffer.tell() / 1000.0 )  # size in KB
+        buffer.close()
+        scores.append(score)
+    return scores
+
 # Compute human preference score
 def do_human_preference_score(*, images, prompts, use_paths=False):
     if use_paths:
