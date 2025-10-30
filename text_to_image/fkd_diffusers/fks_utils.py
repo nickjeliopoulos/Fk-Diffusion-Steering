@@ -105,27 +105,26 @@ def do_eval(*, prompt, images, metrics_to_compute):
             results[metric]["max"] = results_arr.max().item()
             results[metric]["min"] = results_arr.min().item()
 
-        elif metric == "JPEG_SCORE":
-            results[metric] = {}
+        elif metric == "JPEG_SCORE" or metric == "JPEG_RAW":
+            results["JPEG_SCORE"] = {}
 
-            results[metric]["result"] = do_jpeg_score(images=images)
-            results_arr = torch.tensor(results[metric]["result"])
+            results["JPEG_SCORE"]["result"] = do_jpeg_score(images=images)
+            results_arr = torch.tensor(results["JPEG_SCORE"]["result"])
 
-            results[metric]["mean"] = results_arr.mean().item()
-            results[metric]["std"] = results_arr.std().item()
-            results[metric]["max"] = results_arr.max().item()
-            results[metric]["min"] = results_arr.min().item()
+            results["JPEG_SCORE"]["mean"] = results_arr.mean().item()
+            results["JPEG_SCORE"]["std"] = results_arr.std().item()
+            results["JPEG_SCORE"]["max"] = results_arr.max().item()
+            results["JPEG_SCORE"]["min"] = results_arr.min().item()
 
-        elif metric == "JPEG_RAW":
-            results[metric] = {}
+            results["JPEG_RAW"] = {}
 
-            results[metric]["result"] = do_jpeg(images=images)
-            results_arr = torch.tensor(results[metric]["result"])
+            results["JPEG_RAW"]["result"] = do_jpeg(images=images)
+            results_arr = torch.tensor(results["JPEG_RAW"]["result"])
 
-            results[metric]["mean"] = results_arr.mean().item()
-            results[metric]["std"] = results_arr.std().item()
-            results[metric]["max"] = results_arr.max().item()
-            results[metric]["min"] = results_arr.min().item()
+            results["JPEG_RAW"]["mean"] = results_arr.mean().item()
+            results["JPEG_RAW"]["std"] = results_arr.std().item()
+            results["JPEG_RAW"]["max"] = results_arr.max().item()
+            results["JPEG_RAW"]["min"] = results_arr.min().item()
 
         else:
             raise ValueError(f"Unknown metric: {metric}")

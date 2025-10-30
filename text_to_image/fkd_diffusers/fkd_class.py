@@ -139,7 +139,7 @@ class FKD:
             ess = 1.0 / (normalized_w.pow(2).sum())
 
             if ess < 0.5 * self.num_particles:
-                print(f"Resampling at timestep {sampling_idx} with ESS: {ess}")
+                # print(f"Resampling at timestep {sampling_idx} with ESS: {ess}")
                 # Resample indices based on weights
                 indices = torch.multinomial(
                     w, num_samples=self.num_particles, replacement=True
