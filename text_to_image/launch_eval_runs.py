@@ -157,7 +157,6 @@ def main(args):
 	#     json.dump(vars(args), f, indent=4)
 
 	metrics_to_compute = args.metrics_to_compute.split("#")
-	metrics_to_compute = [("JPEG_RAW" if m == "JPEG_SCORE" else m) for m in metrics_to_compute]
 	print(f"Metrics to Compute: {metrics_to_compute}")
 	assert len(metrics_to_compute) == 1, "Only one metric should be computed"
 
@@ -222,7 +221,7 @@ def main(args):
 
 		n_samples += 1
 
-		average_time += time_taken.total_seconds()
+		# average_time += time_taken.total_seconds()
 		# print(f"Time taken: {average_time / n_samples}")
 
 		# sort images by reward
@@ -281,7 +280,7 @@ def main(args):
 def get_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--output_dir", type=str, default="geneval_outputs")
-	parser.add_argument("--save_individual_images", type=bool, default=True)
+	parser.add_argument("--save_individual_images", type=bool, default=False)
 	parser.add_argument("--num_particles", type=int, default=4)
 	parser.add_argument("--num_inference_steps", type=int, default=50)
 	parser.add_argument("--use_smc", action="store_true")
@@ -290,7 +289,7 @@ def get_args():
 	parser.add_argument(
 		"--metrics_to_compute",
 		type=str,
-		default="JPEG#ImageReward",
+		default="ImageReward",
 		help="# separated list of metrics",
 	)
 	parser.add_argument("--prompt_path", type=str, default="geneval_metadata.jsonl")
