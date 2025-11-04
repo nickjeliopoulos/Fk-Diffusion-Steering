@@ -294,7 +294,7 @@ def get_args():
 		default="ImageReward",
 		help="# separated list of metrics",
 	)
-	parser.add_argument("--prompt_path", type=str, default="geneval_metadata.jsonl")
+	parser.add_argument("--prompt_path", type=str, choices=["open_img_pref_sampled_60.jsonl", "drawbench"], default="open_img_pref_sampled_60.jsonl")
 	parser.add_argument("--model_idx", type=int, default=0, help="Used for selecting model and configuration")
 
 	parser.add_argument(
@@ -308,9 +308,6 @@ def get_args():
 	parser.add_argument("--resample_t_end", type=int, default=30)
 	parser.add_argument("--potential_type", type=str, default="diff")
 	args = parser.parse_args()
-
-	if args.prompt_path == "geneval_metadata.jsonl":
-		args.save_individual_images = True
 
 	args.output_dir = args.prompt_path.replace(".json", f"_outputs")
 
