@@ -22,7 +22,7 @@ fonttools==4.55.3
 frozenlist==1.5.0
 fsspec==2024.9.0
 ftfy==6.3.1
-hpsv2==1.2.0
+hpsv2x==1.2.0
 huggingface-hub==0.27.1
 idna==3.10
 -e git+ssh://git@github.com/THUDM/ImageReward.git@2ca71bac4ed86b922fe53ddaec3109fe94d45fd3#egg=image_reward

@@ -134,7 +134,7 @@ class FKD:
         w[torch.isnan(w)] = 0.0
 
         # If weights are all zero, print diagnostics about w
-        if torch.allclose(w, torch.zeros_like(w)):
+        if torch.allclose(w, torch.zeros_like(w)) or torch.allclose(w, torch.ones_like(w)*1e10):
             w_flat = w.view(-1)
             stats = {
             "timestep": int(sampling_idx),
@@ -147,7 +147,8 @@ class FKD:
             "num_zeros": int((w_flat == 0).sum().item()),
             "num_positive": int((w_flat > 0).sum().item()),
             }
-            print(f"FKD - all-zero importance weights detected: {stats}")
+            print(f"FKD - odd importance weights detected: {stats}\n")
+
 
         if self.adaptive_resampling or sampling_idx == self.time_steps - 1:
             # compute effective sample size

@@ -1,9 +1,17 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 import clip
+### IMPORTANT - from hpsv2x package, NOT original hpsv2 package
 import hpsv2
 import io
+import numpy as np
+import math
+
+from transformers import CLIPModel, CLIPProcessor
+from PIL import Image
+from diffusers.utils import numpy_to_pil, pt_to_pil
 
 from .image_reward_utils import rm_load
 from .llm_grading import LLMGrader
@@ -23,7 +31,7 @@ def get_reward_function(reward_name, images, prompts, metric_to_chase="overall_s
     if reward_name == "ImageReward":
         return do_image_reward(images=images, prompts=prompts)
     
-    elif reward_name == "Clip-Score":
+    elif reward_name in ["Clip-Score","Clip-Score-only"]:
         return do_clip_score(images=images, prompts=prompts)
     
     elif reward_name == "HumanPreference":
@@ -66,14 +74,15 @@ def do_jpeg(*,images):
     return sizes
 
 # Compute human preference score
+### NOTE: Changed from v2.1 to v2.0 for comparison with other methods
 def do_human_preference_score(*, images, prompts, use_paths=False):
     if use_paths:
-        scores = hpsv2.score(images, prompts, hps_version="v2.1")
+        scores = hpsv2.score(images, prompts, hps_version="v2.0")
         scores = [float(score) for score in scores]
     else:
         scores = []
         for i, image in enumerate(images):
-            score = hpsv2.score(image, prompts[i], hps_version="v2.1")
+            score = hpsv2.score(image, prompts[i], hps_version="v2.0")
             # print(f"Human preference score for image {i}: {score}")
             score = float(score[0])
             scores.append(score)
@@ -124,10 +133,13 @@ def do_image_reward(*, images, prompts):
 def do_clip_score(*, images, prompts):
     global REWARDS_DICT
     if REWARDS_DICT["Clip-Score"] is None:
-        REWARDS_DICT["Clip-Score"] = CLIPScore(download_root=".", device="cuda")
+        ### ORIGINAL
+        # REWARDS_DICT["Clip-Score"] = CLIPScore(download_root=".", device="cuda")
+        ### MODIFIED for EvoAlgs, CVPR26
+        REWARDS_DICT["Clip-Score"] = ModifiedCLIPScore(device="cuda:0", inference_dtype=torch.float16)
     with torch.no_grad():
         clip_result = [
-            REWARDS_DICT["Clip-Score"].score(prompt, images[i])
+            REWARDS_DICT["Clip-Score"].score(prompt, images[i]).detach().cpu().item()
             for i, prompt in enumerate(prompts)
         ]
     return clip_result
@@ -197,3 +209,61 @@ class CLIPScore(nn.Module):
             return rewards, {'image': image_features, 'txt': txt_features}
 
         return rewards.detach().cpu().numpy().item()
+
+### Ripped from DiffusionEvoAlgs (also used in Fk-Diffusion-Steering fork)
+### Really ought to change the preprocess code, however I am keeping it "as-is" because this is consistent across survyed methods and codebases
+class ModifiedCLIPScore(torch.nn.Module):
+    def __init__(self, device, inference_dtype: torch.dtype = torch.float16):
+        super().__init__()
+        self.clip_model_name = "openai/clip-vit-base-patch16"
+        self.dtype = inference_dtype
+        self.device = device
+
+        self.processor = CLIPProcessor.from_pretrained(self.clip_model_name)
+        self.clip_model = CLIPModel.from_pretrained(
+            self.clip_model_name, 
+            torch_dtype=self.dtype
+        ).eval().to(device=device)
+        
+    def score(self, prompts, images, return_feature=False):
+        if isinstance(images, torch.Tensor):
+            images = (images * 255).round().clamp(0, 255).to(torch.uint8).cpu().numpy()
+            images = images.transpose(0, 2, 3, 1)  # NCHW -> NHWC
+            pil_images = [Image.fromarray(image) for image in images]
+
+        elif isinstance(images, np.ndarray):
+            pil_images = numpy_to_pil(images)
+
+        elif isinstance(images, list):
+            if not isinstance(images[0], Image.Image):
+                raise ValueError(f"Images must contain PIL Images if it is a List - instead it contains {type(images[0])}")
+            pil_images = [image for image in images]
+        
+        elif isinstance(images, Image.Image):
+            pil_images = [images]
+
+        else:
+            raise ValueError(f"Images type {type(images)} unsupported")
+
+        if isinstance(prompts, list):
+            prompt = prompts[0]
+        elif isinstance(prompts, str):
+            prompt = prompts
+        else:
+            raise ValueError(f"Prompts of type {type(prompts)} invalid")
+
+        ### Man I hate this
+        inputs = self.processor(
+            text=prompt,
+            images=images,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+        ).to(device=self.device)
+        outputs = self.clip_model(**inputs)
+        score = outputs[0][:, 0]
+
+        if return_feature:
+           raise ValueError("No support for return_feature.")
+
+        return score

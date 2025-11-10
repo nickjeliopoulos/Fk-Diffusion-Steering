@@ -34,6 +34,7 @@ def wandb_log(
 	mean_fitness, 
 	min_fitness, 
 	std_fitness,
+	raw_fitness: list,
 	prompt: str, 
 	running_time: float, 
 	device: torch.device
@@ -42,6 +43,7 @@ def wandb_log(
 	wandb.log(
 		{
 			"step": step,
+			"raw_fitness": raw_fitness,
 			"pop_best_eval": max_fitness,
 			"mean_eval": mean_fitness,
 			"min_eval": min_fitness,
@@ -229,6 +231,7 @@ def main(args):
 		# sort images by reward
 		guidance_reward = np.array(results[args.guidance_reward_fn]["result"])
 		sorted_idx = np.argsort(guidance_reward)[::-1]
+		sorted_guidance_rewards = guidance_reward[sorted_idx]
 		images = [images[i] for i in sorted_idx]
 
 		metric = metrics_to_compute[0]
@@ -270,6 +273,7 @@ def main(args):
 		wandb_log(
 			step=1,
 			image=images[0],
+			raw_fitness=sorted_guidance_rewards.tolist(),
 			max_fitness=maxv,
 			mean_fitness=mean,
 			min_fitness=minv,
@@ -294,7 +298,7 @@ def get_args():
 		default="ImageReward",
 		help="# separated list of metrics",
 	)
-	parser.add_argument("--prompt_path", type=str, choices=["open_img_pref_sampled_60.jsonl", "drawbench"], default="open_img_pref_sampled_60.jsonl")
+	parser.add_argument("--prompt_path", type=str, choices=["open_img_pref_sampled_60.jsonl", "drawbench.jsonl"], default="open_img_pref_sampled_60.jsonl")
 	parser.add_argument("--model_idx", type=int, default=0, help="Used for selecting model and configuration")
 
 	parser.add_argument(
